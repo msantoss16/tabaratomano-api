@@ -16,6 +16,7 @@ COPY apps/scraper/package.json ./apps/scraper/
 RUN npm install
 
 # Copia código
+COPY tsconfig.json ./
 COPY packages/database ./packages/database
 COPY apps/scraper ./apps/scraper
 

@@ -11,6 +11,7 @@ COPY apps/api/package.json ./apps/api/
 RUN npm install
 
 # Copia código
+COPY tsconfig.json ./
 COPY packages/database ./packages/database
 COPY apps/api ./apps/api
 
