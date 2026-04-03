@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Deal {
+  id            String   @id @default(uuid())
+  title         String
+  price_cents   Int
+  marketplace   String
+  url_affiliate String
+  rating        Float?
+  review_count  Int?
+  seller_name   String?
+  category      String?
+  images        String[] // Uses native array in PostgreSQL
+  url_canonical String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("deals")
+}

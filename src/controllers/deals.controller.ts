@@ -1,16 +1,11 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { supabase } from '../config/supabase';
+import { prisma } from '../config/prisma';
 
 export const dealsController = {
   // Get all deals found
   getAllDeals: async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const { data, error } = await supabase
-        .from('deals')
-        .select('*');
-        
-      if (error) throw error;
-      
+      const data = await prisma.deal.findMany();
       return data;
     } catch (err) {
       request.log.error(err);
@@ -22,17 +17,12 @@ export const dealsController = {
   getDealById: async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
     try {
       const { id } = request.params;
-      const { data, error } = await supabase
-        .from('deals')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const data = await prisma.deal.findUnique({
+        where: { id }
+      });
         
-      if (error) {
-        if (error.code === 'PGRST116') { // Not found code
-          return reply.code(404).send({ error: 'Deal not found' });
-        }
-        throw error;
+      if (!data) {
+        return reply.code(404).send({ error: 'Deal not found' });
       }
       
       return data;

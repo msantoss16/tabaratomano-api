@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { dealsController } from '../controllers/deals.controller';
+import { scraperController } from '../controllers/scraper.controller';
 
 export default async function dealsRoutes(fastify: FastifyInstance) {
   fastify.get('/', {
@@ -61,4 +62,18 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
       }
     }
   }, dealsController.getDealById);
+
+  fastify.post('/scrape', {
+    schema: {
+      tags: ['Deals'],
+      summary: 'Extract a product via Affiliate URL and sync with DB',
+      body: {
+        type: 'object',
+        required: ['url'],
+        properties: {
+          url: { type: 'string' }
+        }
+      }
+    }
+  }, scraperController.scrapeAndSave);
 }
