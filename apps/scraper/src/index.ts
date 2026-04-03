@@ -1,7 +1,7 @@
-import type { ScrapedProduct } from './mercadolivre';
-import { scrapeMercadoLivre } from './mercadolivre';
-import { scrapeMagalu } from './magalu';
-import { scrapeShopee } from './shopee';
+import type { ScrapedProduct } from './mercadolivre.js';
+import { scrapeMercadoLivre } from './mercadolivre.js';
+import { scrapeMagalu } from './magalu.js';
+import { scrapeShopee } from './shopee.js';
 
 export async function scrapeUrl(url: string): Promise<ScrapedProduct> {
   const lowercaseUrl = url.toLowerCase();

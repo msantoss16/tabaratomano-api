@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { couponsController } from '../controllers/coupons.controller';
+import { couponsController } from '../controllers/coupons.controller.js';
 
 export default async function couponsRoutes(fastify: FastifyInstance) {
   fastify.get('/', {

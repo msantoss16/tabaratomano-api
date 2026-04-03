@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { dealsController } from '../controllers/deals.controller';
-import { scraperController } from '../controllers/scraper.controller';
+import { dealsController } from '../controllers/deals.controller.js';
+import { scraperController } from '../controllers/scraper.controller.js';
 
 export default async function dealsRoutes(fastify: FastifyInstance) {
   fastify.get('/', {

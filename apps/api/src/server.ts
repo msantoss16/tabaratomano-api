@@ -3,10 +3,10 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
-import dealsRoutes from './routes/deals.routes';
-import categoriesRoutes from './routes/categories.routes';
-import couponsRoutes from './routes/coupons.routes';
-import blogRoutes from './routes/blog.routes';
+import dealsRoutes from './routes/deals.routes.js';
+import categoriesRoutes from './routes/categories.routes.js';
+import couponsRoutes from './routes/coupons.routes.js';
+import blogRoutes from './routes/blog.routes.js';
 
 dotenv.config();
 

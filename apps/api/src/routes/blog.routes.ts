@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { blogController } from '../controllers/blog.controller';
+import { blogController } from '../controllers/blog.controller.js';
 
 export default async function blogRoutes(fastify: FastifyInstance) {
   fastify.get('/', {

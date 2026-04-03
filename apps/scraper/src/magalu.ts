@@ -1,7 +1,7 @@
 import { chromium } from 'playwright-extra';
 // @ts-ignore
 import stealth from 'puppeteer-extra-plugin-stealth';
-import type { ScrapedProduct } from './mercadolivre';
+import type { ScrapedProduct } from './mercadolivre.js';
 
 chromium.use(stealth());
 
