@@ -1,22 +1,59 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
     image: postgres:16-alpine
     container_name: tabaratomano-db
-    environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: tabaratomano
-    ports:
-      - "5432:5432"
+    restart: always
+    env_file:
+      - .env
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U root"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: tabaratomano-api
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      scraper:
+        condition: service_started
+
+  scraper:
+    build:
+      context: .
+      dockerfile: apps/scraper/Dockerfile
+    container_name: tabaratomano-scraper
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3001:3001"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres-data:
+
+networks:
+  backend:
+    driver: bridge

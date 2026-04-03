@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '../config/prisma';
-import { scrapeUrl } from '../scraper';
+import { prisma } from '@tabaratomano/database';
 
+const SCRAPER_URL = process.env.SCRAPER_URL || 'http://localhost:3001';
 export const scraperController = {
   async scrapeAndSave(request: FastifyRequest, reply: FastifyReply) {
     const { url } = request.body as { url?: string };
@@ -11,9 +11,20 @@ export const scraperController = {
     }
 
     try {
-      // Chama o scraper orquestrador para extrair os dados
-      const product = await scrapeUrl(url);
+      // Chama o scraper service na rede interna docker
+      const scraperRes = await fetch(`${SCRAPER_URL}/scrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
 
+      if (!scraperRes.ok) {
+        const errData = await scraperRes.json().catch(() => ({}));
+        throw new Error(errData.message || 'Erro na requisição para o scraper service');
+      }
+      
+      const resData = await scraperRes.json();
+      const product = resData.product;
       // Usamos upsert para evitar duplicações se batermos na mesma URL
       const savedDeal = await prisma.deal.create({
         data: {

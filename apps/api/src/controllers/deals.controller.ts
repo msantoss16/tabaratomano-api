@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '../config/prisma';
+import { prisma } from '@tabaratomano/database';
 
 export const dealsController = {
   // Get all deals found

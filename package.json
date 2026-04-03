@@ -1,35 +1,21 @@
 {
-  "name": "tabaratomano-api",
+  "name": "tabaratomano-monorepo",
   "version": "1.0.0",
-  "type": "module",
-  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch src/server.ts"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@fastify/cors": "^11.2.0",
-    "@fastify/swagger": "^9.7.0",
-    "@fastify/swagger-ui": "^5.2.5",
-    "@prisma/adapter-pg": "^7.5.0",
-    "@prisma/client": "^7.5.0",
-    "dotenv": "^17.3.1",
-    "fastify": "^5.8.4",
-    "pg": "^8.20.0",
-    "playwright": "^1.58.2",
-    "playwright-extra": "^4.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "dev:api": "npm run dev --workspace=@tabaratomano/api",
+    "dev:scraper": "npm run dev --workspace=@tabaratomano/scraper",
+    "db:generate": "npm run generate --workspace=@tabaratomano/database",
+    "db:push": "npm run db:push --workspace=@tabaratomano/database"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
-    "@types/pg": "^8.20.0",
-    "prisma": "^7.5.0",
-    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "@types/node": "^25.5.0",
+    "ts-node": "^10.9.2"
   }
 }
