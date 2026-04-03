@@ -2,12 +2,17 @@ FROM mcr.microsoft.com/playwright:v1.42.1-jammy
 
 WORKDIR /app
 
-# Copia dependências primeiro (cache)
+# ATUALIZA NODE PRA VERSÃO COMPATÍVEL COM PRISMA
+RUN apt-get update && apt-get install -y curl \
+  && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+  && apt-get install -y nodejs \
+  && node -v
+
+# Copia dependências
 COPY package*.json ./
 COPY packages/database/package.json ./packages/database/
 COPY apps/scraper/package.json ./apps/scraper/
 
-# Instala deps
 RUN npm install
 
 # Copia código
@@ -18,12 +23,10 @@ COPY apps/scraper ./apps/scraper
 WORKDIR /app/packages/database
 RUN npx prisma generate
 
-# Build do scraper (TypeScript)
+# Build
 WORKDIR /app/apps/scraper
 RUN npm run build
 
-# Porta do scraper (API HTTP)
 EXPOSE 3001
 
-# Start
 CMD ["node", "dist/server.js"]
