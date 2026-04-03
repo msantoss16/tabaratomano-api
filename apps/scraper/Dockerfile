@@ -24,6 +24,9 @@ COPY apps/scraper ./apps/scraper
 WORKDIR /app/packages/database
 RUN npx prisma generate
 
+# Build do database package
+RUN npx tsc
+
 # Build
 WORKDIR /app/apps/scraper
 RUN npm run build

@@ -19,6 +19,9 @@ COPY apps/api ./apps/api
 WORKDIR /app/packages/database
 RUN npx prisma generate
 
+# Build do database package
+RUN npx tsc
+
 # Build da API (TypeScript)
 WORKDIR /app/apps/api
 RUN npm run build
@@ -27,4 +30,5 @@ RUN npm run build
 EXPOSE 3000
 
 # Start com migration (produção)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+WORKDIR /app/packages/database
+CMD ["sh", "-c", "npx prisma db push && cd /app/apps/api && node dist/server.js"]
