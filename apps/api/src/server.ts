@@ -13,11 +13,20 @@ import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.trim() === '') {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start in production without a secure secret.');
+    process.exit(1);
+  }
+  console.warn('WARNING: JWT_SECRET is not set. Using an insecure default. Do NOT use this configuration in production.');
+}
+
 const fastify = Fastify({ logger: true });
 
 // Register JWT
 fastify.register(fastifyJwt, {
-  secret: process.env.JWT_SECRET || 'supersecret' // Fallback for dev, should be strictly in .env in prod
+  secret: (jwtSecret && jwtSecret.trim()) ? jwtSecret : 'supersecret-dev-only'
 });
 
 // Decorate fastify with authenticate hook
