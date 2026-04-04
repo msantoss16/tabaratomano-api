@@ -3,14 +3,40 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
+import fastifyJwt from '@fastify/jwt';
+
 import dealsRoutes from './routes/deals.routes.js';
 import categoriesRoutes from './routes/categories.routes.js';
 import couponsRoutes from './routes/coupons.routes.js';
 import blogRoutes from './routes/blog.routes.js';
+import authRoutes from './routes/auth.routes.js';
 
 dotenv.config();
 
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret || jwtSecret.trim() === '') {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start in production without a secure secret.');
+    process.exit(1);
+  }
+  console.warn('WARNING: JWT_SECRET is not set. Using an insecure default. Do NOT use this configuration in production.');
+}
+
 const fastify = Fastify({ logger: true });
+
+// Register JWT
+fastify.register(fastifyJwt, {
+  secret: (jwtSecret && jwtSecret.trim()) ? jwtSecret : 'supersecret-dev-only'
+});
+
+// Decorate fastify with authenticate hook
+fastify.decorate('authenticate', async function (request: any, reply: any) {
+  try {
+    await request.jwtVerify();
+  } catch (err) {
+    reply.send(err);
+  }
+});
 
 // Register Swagger
 fastify.register(fastifySwagger, {
@@ -24,6 +50,14 @@ fastify.register(fastifySwagger, {
     schemes: ['http'],
     consumes: ['application/json'],
     produces: ['application/json'],
+    securityDefinitions: {
+      bearerAuth: {
+        type: 'apiKey',
+        name: 'Authorization',
+        in: 'header',
+        description: 'Format: "Bearer [token]"'
+      }
+    }
   },
 });
 
@@ -42,6 +76,7 @@ fastify.register(cors, {
 });
 
 // Register routes
+fastify.register(authRoutes, { prefix: '/api/auth' });
 fastify.register(dealsRoutes, { prefix: '/api/deals' });
 fastify.register(categoriesRoutes, { prefix: '/api/categories' });
 fastify.register(couponsRoutes, { prefix: '/api/coupons' });

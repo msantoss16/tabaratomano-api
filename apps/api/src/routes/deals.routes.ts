@@ -64,6 +64,7 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
   }, dealsController.getDealById);
 
   fastify.post('/scrape', {
+    onRequest: [(fastify as any).authenticate],
     schema: {
       tags: ['Deals'],
       summary: 'Extract a product via Affiliate URL and sync with DB',
