@@ -1,4 +1,4 @@
-
+version: "3.8"
 
 services:
   postgres:
@@ -25,15 +25,13 @@ services:
     restart: always
     env_file:
       - .env
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     networks:
       - backend
     depends_on:
       postgres:
         condition: service_healthy
-      scraper:
-        condition: service_started
 
   scraper:
     build:
@@ -43,8 +41,8 @@ services:
     restart: always
     env_file:
       - .env
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     networks:
       - backend
     depends_on:
