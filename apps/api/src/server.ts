@@ -37,7 +37,8 @@ fastify.register(fastifySwaggerUi, {
 
 // Register CORS
 fastify.register(cors, {
-  origin: '*', // Allow all origins for now (dev mode)
+  origin: ['https://tabaratomano.com.br', 'http://localhost:3000', 'http://localhost:5173'],
+  credentials: true
 });
 
 // Register routes
