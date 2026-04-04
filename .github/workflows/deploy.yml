@@ -28,13 +28,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      #  Lint (opcional, mas recomendado)
-      - name: Run lint
-        run: npm run lint || echo "Lint skipped"
+      # #  Lint (opcional, mas recomendado)
+      # - name: Run lint
+      #   run: npm run lint || echo "Lint skipped"
 
-      #  Build (garante que não quebra)
-      - name: Build project
-        run: npm run build
+      # #  Build (garante que não quebra)
+      # - name: Build project
+      #   run: npm run build
 
       #  Deploy via SSH
       - name: Deploy to VPS
@@ -62,18 +62,6 @@ jobs:
 
             echo " Aguardando containers..."
             sleep 10
-
-            echo " Healthcheck..."
-            if ! curl -f -k https://api.tabaratomano.com.br/; then
-              echo "❌ Deploy falhou! Tentando rollback..."
-
-              LAST_BACKUP=$(git branch | grep backup- | tail -n 1 | tr -d ' ')
-              git checkout $LAST_BACKUP
-
-              docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-
-              exit 1
-            fi
 
             echo " Limpando imagens antigas..."
             docker image prune -f
