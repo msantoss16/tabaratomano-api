@@ -23,3 +23,13 @@ model Deal {
 
   @@map("deals")
 }
+
+model Admin {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("admins")
+}
