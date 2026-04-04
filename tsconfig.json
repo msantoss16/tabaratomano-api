@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
+    "composite": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "target": "esnext",
@@ -19,5 +18,11 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  "files": [],
+  "references": [
+    { "path": "./apps/api" },
+    { "path": "./apps/scraper" },
+    { "path": "./packages/database" }
+  ]
 }
