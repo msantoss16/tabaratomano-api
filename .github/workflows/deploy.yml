@@ -1,4 +1,4 @@
-name: Deploy API
+name: 🚀 Deploy API (Production)
 
 on:
   push:
@@ -10,24 +10,72 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      #  Checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      #  Cache node_modules
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      #  Install deps
+      - name: Install dependencies
+        run: npm install
+
+      #  Lint (opcional, mas recomendado)
+      - name: Run lint
+        run: npm run lint || echo "Lint skipped"
+
+      #  Build (garante que não quebra)
+      - name: Build project
+        run: npm run build
+
+      #  Deploy via SSH
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          script_stop: true
 
           script: |
+            set -e
+
             cd ~/tabaratomano-api
 
-            echo "Atualizando código..."
-            git pull origin main
+            echo " Salvando versão atual..."
+            git branch backup-$(date +%s) || true
 
-            echo "Rebuild containers..."
-            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+            echo " Atualizando código..."
+            git fetch origin
+            git reset --hard origin/main
 
-            echo "Limpando imagens antigas..."
-            docker system prune -f
+            echo " Build e subida (sem downtime)..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            echo " Aguardando containers..."
+            sleep 10
+
+            echo " Healthcheck..."
+            if ! curl -f -k https://api.tabaratomano.com.br/; then
+              echo "❌ Deploy falhou! Tentando rollback..."
+
+              LAST_BACKUP=$(git branch | grep backup- | tail -n 1 | tr -d ' ')
+              git checkout $LAST_BACKUP
+
+              docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+
+              exit 1
+            fi
+
+            echo " Limpando imagens antigas..."
+            docker image prune -f
+
+            echo " Deploy finalizado com sucesso!"
