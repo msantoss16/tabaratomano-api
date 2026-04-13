@@ -1,11 +1,11 @@
-import { prisma } from '@tabaratomano/database';
-import bcrypt from 'bcryptjs';
+import { prisma } from "@tabaratomano/database";
+import bcrypt from "bcryptjs";
 
 async function createAdmin() {
   const args = process.argv.slice(2);
-  
+
   if (args.length < 2) {
-    console.error('Usage: npx tsx create-admin.ts <email> <password>');
+    console.error("Usage: npx tsx create-admin.ts <email> <password>");
     process.exit(1);
   }
 
@@ -14,7 +14,7 @@ async function createAdmin() {
 
   try {
     const existing = await prisma.admin.findUnique({ where: { email } });
-    
+
     if (existing) {
       console.error(`Admin with email ${email} already exists.`);
       process.exit(1);
@@ -35,7 +35,7 @@ async function createAdmin() {
     console.log(`Email: ${admin.email}\n`);
     console.log(`Now you can login with this email and your password.`);
   } catch (error) {
-    console.error('Error creating admin:', error);
+    console.error("Error creating admin:", error);
   } finally {
     await prisma.$disconnect();
   }
