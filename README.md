@@ -89,7 +89,7 @@ docker compose up -d
 A API possui rotas protegidas que exigem um token Bearer. Para criar o primeiro usuário administrador, você deve executar o script utilitário diretamente dentro do container da API:
 
 ```bash
-docker exec -it -w /app/apps/api tabaratomano-api npx tsx src/scripts/create-admin.ts seu-email@exemplo.com sua-senha
+docker exec -it tabaratomano-api npx tsx src/scripts/create-admin.ts seu-email@exemplo.com sua-senha
 ```
 
 ## Documentação da API
