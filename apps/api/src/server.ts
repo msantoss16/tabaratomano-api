@@ -12,6 +12,7 @@ import categoriesRoutes from "./routes/categories.routes.js";
 import couponsRoutes from "./routes/coupons.routes.js";
 import blogRoutes from "./routes/blog.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import messengerRoutes from "./routes/messenger.routes.js";
 
 dotenv.config();
 
@@ -88,6 +89,7 @@ fastify.register(cors, {
     "https://tabaratomano.com.br",
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://localhost:8080",
   ],
   credentials: true,
 });
@@ -98,6 +100,7 @@ fastify.register(dealsRoutes, { prefix: "/api/deals" });
 fastify.register(categoriesRoutes, { prefix: "/api/categories" });
 fastify.register(couponsRoutes, { prefix: "/api/coupons" });
 fastify.register(blogRoutes, { prefix: "/api/blog" });
+fastify.register(messengerRoutes, { prefix: "/api/messenger" });
 
 // Health check route
 fastify.get("/", async (request, reply) => {
