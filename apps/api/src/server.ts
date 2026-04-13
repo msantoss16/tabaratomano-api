@@ -4,6 +4,8 @@ import cors from '@fastify/cors';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fastifyJwt from '@fastify/jwt';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyRateLimit from '@fastify/rate-limit';
 
 import dealsRoutes from './routes/deals.routes.js';
 import categoriesRoutes from './routes/categories.routes.js';
@@ -23,6 +25,13 @@ if (!jwtSecret || jwtSecret.trim() === '') {
 }
 
 const fastify = Fastify({ logger: true });
+
+// Register Security Plugins
+fastify.register(fastifyHelmet);
+fastify.register(fastifyRateLimit, {
+  max: 100,
+  timeWindow: '1 minute'
+});
 
 // Register JWT
 fastify.register(fastifyJwt, {

@@ -1,8 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@tabaratomano/database';
 import bcrypt from 'bcryptjs';
-
-const prisma = new PrismaClient();
 
 export const authController = {
   login: async (request: FastifyRequest, reply: FastifyReply) => {
@@ -27,11 +25,16 @@ export const authController = {
       }
 
       // Assert request.server.jwt exists (decorated in server.ts)
-      const token = (request.server as any).jwt.sign({ 
-        id: admin.id, 
-        email: admin.email,
-        role: 'admin'
-      });
+      const token = (request.server as any).jwt.sign(
+        { 
+          id: admin.id, 
+          email: admin.email,
+          role: 'admin'
+        },
+        {
+          expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+        }
+      );
 
       return reply.send({ token });
     } catch (error) {

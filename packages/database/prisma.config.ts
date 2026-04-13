@@ -6,6 +6,6 @@ export default defineConfig({
     path: './prisma/migrations',
   },
   datasource: {
-    url: process.env.DATABASE_URL || '',
+    url: process.env.DATABASE_URL || 'postgresql://root:rootpassword@localhost:5432/tabaratomano?schema=public',
   },
 });
