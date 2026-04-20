@@ -19,6 +19,22 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: tabaratomano-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -27,6 +43,8 @@ services:
     restart: always
     env_file:
       - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
     ports:
       - "3000:3000"
     networks:
@@ -34,6 +52,21 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:3000/",
+        ]
+      interval: 10s
+      timeout: 300s
+      retries: 5
 
   scraper:
     build:
@@ -51,8 +84,31 @@ services:
       postgres:
         condition: service_healthy
 
+  whatsapp:
+    build:
+      context: .
+      dockerfile: apps/whatsapp/Dockerfile
+    container_name: tabaratomano-whatsapp
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - API_URL=http://api:3000
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - backend
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - baileys-auth:/app/apps/whatsapp/auth_info_baileys
+
 volumes:
   postgres-data:
+  redis-data:
+  baileys-auth:
 
 networks:
   backend:

@@ -41,6 +41,34 @@ export const scraperController = {
         }
       });
 
+      // ─── Auto-generate message for the queue ──────────────────────────────────
+      try {
+        const config = await prisma.autoSendConfig.findUnique({ where: { id: 'singleton' } });
+        
+        if (config?.enabled && config.auto_generate_from_deals) {
+          const priceFormatted = (product.price_cents / 100).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+          });
+
+          await prisma.messageQueue.create({
+            data: {
+              channel: (config.channels as 'whatsapp' | 'telegram' | 'both') || 'both',
+              title: `🔥 OFERTA: ${product.title}`,
+              body: `*${product.title}*\n\n💰 Por apenas: *${priceFormatted}*\n\n🛒 Compre aqui: ${product.url_affiliate || product.url_canonical}\n\n#oferta #promo`,
+              image_url: product.images && product.images.length > 0 ? product.images[0] : '',
+              link: product.url_affiliate || product.url_canonical,
+              status: 'pending',
+              deal_id: savedDeal.id,
+            },
+          });
+          request.log.info(`[Auto-Messenger] Mensagem gerada automaticamente para o deal ${savedDeal.id}`);
+        }
+      } catch (autoErr) {
+        request.log.error({ err: autoErr }, 'Erro ao gerar mensagem automática');
+        // Não falhamos a requisição principal se a automação falhar
+      }
+
       return reply.code(201).send({
         message: 'Produto minerado e salvo com sucesso!',
         data: savedDeal
