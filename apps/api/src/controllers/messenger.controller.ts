@@ -8,6 +8,10 @@ const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379'
 });
 export const bullMessageQueue = new Queue('messages', { connection });
 
+bullMessageQueue.on('error', (err) => {
+  console.error('[BullMQ] Queue Error:', err);
+});
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type MessageChannel = 'whatsapp' | 'telegram' | 'both';
