@@ -16,8 +16,10 @@
     "@fastify/swagger-ui": "^5.2.5",
     "@tabaratomano/database": "*",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.75.2",
     "dotenv": "^17.3.1",
-    "fastify": "^5.8.4"
+    "fastify": "^5.8.4",
+    "ioredis": "^5.10.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0"

@@ -1,5 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@tabaratomano/database';
+import { Queue } from 'bullmq';
+import IORedis from 'ioredis';
+
+const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
+  maxRetriesPerRequest: null,
+});
+export const bullMessageQueue = new Queue('messages', { connection });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -48,7 +55,9 @@ export const messengerController = {
   getPending: async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const messages = await prisma.messageQueue.findMany({
-        where: { status: 'pending' },
+        where: {
+          status: { in: ['pending', 'scheduled'] },
+        },
         orderBy: { created_at: 'asc' },
       });
       return reply.send(messages);
@@ -98,6 +107,18 @@ export const messengerController = {
           scheduled_at: scheduledDate,
           deal_id: dealId ?? null,
         },
+      });
+
+      let delay = 0;
+      if (scheduledDate) {
+        delay = Math.max(0, scheduledDate.getTime() - Date.now());
+      }
+
+      await bullMessageQueue.add('send_message', message, {
+        jobId: message.id,
+        delay,
+        removeOnComplete: true,
+        removeOnFail: false, // leave it so we can debug, or maybe we don't care
       });
 
       return reply.code(201).send(message);
@@ -192,6 +213,13 @@ export const messengerController = {
       const existing = await prisma.messageQueue.findUnique({ where: { id } });
       if (!existing) return reply.code(404).send({ error: 'Message not found' });
       await prisma.messageQueue.delete({ where: { id } });
+      
+      try {
+        await bullMessageQueue.remove(id);
+      } catch (err) {
+        request.log.warn(`Failed to remove job ${id} from bullmq`);
+      }
+
       return reply.code(204).send();
     } catch (err) {
       request.log.error(err);
