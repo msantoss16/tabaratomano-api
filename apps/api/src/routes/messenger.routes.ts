@@ -78,7 +78,7 @@ export default async function messengerRoutes(fastify: FastifyInstance) {
         type: 'object',
         required: ['body', 'channel'],
         properties: {
-          channel: { type: 'string', enum: ['whatsapp', 'telegram', 'both'] },
+          channel: { type: 'string', enum: ['whatsapp', 'telegram', 'x', 'both', 'all'] },
           title: { type: 'string' },
           body: { type: 'string' },
           imageUrl: { type: 'string' },
@@ -105,7 +105,7 @@ export default async function messengerRoutes(fastify: FastifyInstance) {
       body: {
         type: 'object',
         properties: {
-          channel: { type: 'string', enum: ['whatsapp', 'telegram', 'both'] },
+          channel: { type: 'string', enum: ['whatsapp', 'telegram', 'x', 'both', 'all'] },
           title: { type: 'string' },
           body: { type: 'string' },
           imageUrl: { type: 'string' },
@@ -182,7 +182,7 @@ export default async function messengerRoutes(fastify: FastifyInstance) {
         properties: {
           enabled: { type: 'boolean' },
           intervalMinutes: { type: 'number' },
-          channels: { type: 'string', enum: ['whatsapp', 'telegram', 'both'] },
+          channels: { type: 'string', enum: ['whatsapp', 'telegram', 'x', 'both', 'all'] },
           autoGenerateFromDeals: { type: 'boolean' },
         },
       },

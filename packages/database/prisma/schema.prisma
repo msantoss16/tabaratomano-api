@@ -36,7 +36,7 @@ model Admin {
 
 model MessageQueue {
   id           String    @id @default(uuid())
-  channel      String    // "whatsapp" | "telegram" | "both"
+  channel      String    // "whatsapp" | "telegram" | "x" | "both" | "all"
   title        String    @default("")
   body         String
   image_url    String    @default("")
@@ -55,7 +55,7 @@ model AutoSendConfig {
   id                       String  @id @default("singleton")
   enabled                  Boolean @default(false)
   interval_minutes         Int     @default(30)
-  channels                 String  @default("both") // "whatsapp" | "telegram" | "both"
+  channels                 String  @default("all") // "whatsapp" | "telegram" | "x" | "both" | "all"
   auto_generate_from_deals Boolean @default(true)
 
   @@map("auto_send_config")
