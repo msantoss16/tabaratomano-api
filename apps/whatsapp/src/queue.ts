@@ -13,7 +13,7 @@ const connection = new IORedis(REDIS_URL, {
 
 interface ApiMessage {
   id: string;
-  channel: "whatsapp" | "telegram" | "both";
+  channel: "whatsapp" | "telegram" | "x" | "both" | "all";
   title: string;
   body: string;
   image_url: string;
