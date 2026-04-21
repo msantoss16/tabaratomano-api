@@ -14,7 +14,7 @@ bullMessageQueue.on('error', (err) => {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MessageChannel = 'whatsapp' | 'telegram' | 'both';
+type MessageChannel = 'whatsapp' | 'telegram' | 'x' | 'both' | 'all';
 type MessageStatus = 'pending' | 'scheduled' | 'sent' | 'failed' | 'cancelled';
 
 interface CreateMessageBody {
@@ -102,7 +102,7 @@ export const messengerController = {
 
       const message = await prisma.messageQueue.create({
         data: {
-          channel: channel ?? 'both',
+          channel: channel ?? 'all',
           title: title ?? '',
           body,
           image_url: imageUrl ?? '',
