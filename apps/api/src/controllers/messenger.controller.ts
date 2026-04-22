@@ -6,10 +6,13 @@ import IORedis from 'ioredis';
 const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
   maxRetriesPerRequest: null,
 });
-export const bullMessageQueue = new Queue('messages', { connection });
+const queueOpts = { connection, defaultJobOptions: { removeOnComplete: true, removeOnFail: false } };
+export const bullMessageQueueWhatsapp = new Queue('messages_whatsapp', queueOpts);
+export const bullMessageQueueTelegram = new Queue('messages_telegram', queueOpts);
+export const bullMessageQueueX = new Queue('messages_x', queueOpts);
 
-bullMessageQueue.on('error', (err) => {
-  console.error('[BullMQ] Queue Error:', err);
+[bullMessageQueueWhatsapp, bullMessageQueueTelegram, bullMessageQueueX].forEach(q => {
+  q.on('error', (err) => console.error(`[BullMQ] ${q.name} Error:`, err));
 });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -118,12 +121,18 @@ export const messengerController = {
         delay = Math.max(0, scheduledDate.getTime() - Date.now());
       }
 
-      await bullMessageQueue.add('send_message', message, {
-        jobId: message.id,
-        delay,
-        removeOnComplete: true,
-        removeOnFail: false, // leave it so we can debug, or maybe we don't care
-      });
+      const jobOpts = { jobId: message.id, delay };
+      const c = message.channel;
+
+      if (c === 'whatsapp' || c === 'both' || c === 'all') {
+        await bullMessageQueueWhatsapp.add('send_message', message, jobOpts);
+      }
+      if (c === 'telegram' || c === 'both' || c === 'all') {
+        await bullMessageQueueTelegram.add('send_message', message, jobOpts);
+      }
+      if (c === 'x' || c === 'all') {
+        await bullMessageQueueX.add('send_message', message, jobOpts);
+      }
 
       return reply.code(201).send(message);
     } catch (err) {
@@ -218,11 +227,9 @@ export const messengerController = {
       if (!existing) return reply.code(404).send({ error: 'Message not found' });
       await prisma.messageQueue.delete({ where: { id } });
       
-      try {
-        await bullMessageQueue.remove(id);
-      } catch (err) {
-        request.log.warn(`Failed to remove job ${id} from bullmq`);
-      }
+      try { await bullMessageQueueWhatsapp.remove(id); } catch (err) { }
+      try { await bullMessageQueueTelegram.remove(id); } catch (err) { }
+      try { await bullMessageQueueX.remove(id); } catch (err) { }
 
       return reply.code(204).send();
     } catch (err) {
