@@ -6,7 +6,15 @@ import IORedis from 'ioredis';
 const connection = new IORedis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
   maxRetriesPerRequest: null,
 });
-const queueOpts = { connection, defaultJobOptions: { removeOnComplete: true, removeOnFail: false } };
+const queueOpts = { 
+  connection, 
+  defaultJobOptions: { 
+    removeOnComplete: true, 
+    removeOnFail: false,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 5000 }
+  } 
+};
 export const bullMessageQueueWhatsapp = new Queue('messages_whatsapp', queueOpts);
 export const bullMessageQueueTelegram = new Queue('messages_telegram', queueOpts);
 export const bullMessageQueueX = new Queue('messages_x', queueOpts);

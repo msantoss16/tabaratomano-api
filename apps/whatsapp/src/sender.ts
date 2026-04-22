@@ -6,6 +6,9 @@ interface MessageData {
   link?: string;
 }
 
+import axios from 'axios';
+import sharp from 'sharp';
+
 export async function sendWhatsAppMessage(sock: WASocket, msg: MessageData): Promise<void> {
   const groupsStr = process.env.WHATSAPP_GROUP_JIDS;
   if (!groupsStr) {
@@ -22,27 +25,55 @@ export async function sendWhatsAppMessage(sock: WASocket, msg: MessageData): Pro
   // Format the text
   let text = msg.body;
   if (msg.link) {
-    // Ensuring the link is at the end if provided, though typically
-    // it's already inside msg.body via the frontend generator.
     if (!text.includes(msg.link)) {
         text += `\n\nLink: ${msg.link}`;
     }
   }
 
-  for (const jid of groups) {
-    if (msg.image_url) {
-      // Send image with caption
-      await sock.sendMessage(jid, {
-        image: { url: msg.image_url },
-        caption: text,
-      });
-    } else {
-      // Send text only
-      await sock.sendMessage(jid, { text: text });
+  let imageBuffer: Buffer | null = null;
+
+  if (msg.image_url) {
+    try {
+      const response = await axios.get(msg.image_url, { responseType: 'arraybuffer' });
+      // Reduce the image size (width 800px) and convert to JPEG
+      imageBuffer = await sharp(response.data)
+        .resize({ width: 800, withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+    } catch (err) {
+      console.error(`[Sender] Erro ao processar/baixar imagem:`, err);
+      // If downloading fails, we'll just fall back to text automatically
     }
-    console.log(`[Sender] Enviado para ${jid}`);
+  }
+
+  for (const jid of groups) {
+    try {
+      let sentImage = false;
+      if (imageBuffer) {
+        try {
+          await sock.sendMessage(jid, {
+            image: imageBuffer,
+            caption: text,
+          });
+          sentImage = true;
+        } catch (mediaErr: any) {
+          console.error(`[Sender] Falha ao enviar mídia para ${jid}, tentando enviar apenas como texto. Erro:`, mediaErr.message || mediaErr);
+          // Falha no envio da mídia, continua para enviar apenas texto
+        }
+      }
+
+      if (!imageBuffer || !sentImage) {
+        // Send text only
+        await sock.sendMessage(jid, { text: text });
+      }
+      
+      console.log(`[Sender] Enviado para ${jid}`);
+    } catch (err) {
+      console.error(`[Sender] Falha fatal ao enviar para ${jid}:`, err);
+      throw err; // Re-throw to cause BullMQ to retry the job
+    }
     
-    // Tiny delay between group sends
-    await new Promise(r => setTimeout(r, 500));
+    // Short delay between groups
+    await new Promise(r => setTimeout(r, 1000));
   }
 }
