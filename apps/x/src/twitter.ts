@@ -31,7 +31,7 @@ export async function sendTweet(payload: TweetPayload): Promise<void> {
   // append the link as a suffix if it's not already present in the body.
   const bodyHasLink = link && body.includes(link);
   const linkSuffix = link && !bodyHasLink ? `\n\n${link}` : '';
-  const text = `${title ? `${title}\n\n` : ''}${body}${linkSuffix}`;
+  const text = `${body}${linkSuffix}`;
 
   let mediaId: string | undefined;
 

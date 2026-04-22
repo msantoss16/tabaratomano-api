@@ -25,15 +25,9 @@ export function startWorker() {
   console.log(`[Queue X] Worker BullMQ iniciado. Aguardando mensagens no Redis...`);
 
   const worker = new Worker<ApiMessage>(
-    "messages",
+    "messages_x",
     async (job: Job<ApiMessage>) => {
       const msg = job.data;
-      
-      // Ignore if not meant for X
-      if (msg.channel !== "x" && msg.channel !== "all") {
-        console.log(`[Queue X] Ignorando job ${job.id} (channel = ${msg.channel})`);
-        return;
-      }
 
       console.log(`[Queue X] Processando job ${job.id} (Mensagem: ${msg.id})...`);
 
@@ -59,10 +53,6 @@ export function startWorker() {
 
   worker.on("completed", async (job) => {
     const msg = job.data;
-    // se o job pertencer ao X ou 'all', a gente atualiza. 
-    // se for 'all', isso pode conflitar se whatsapp disparar 'completed' tbm
-    // no momento os dois farão update sem problema mudando pro mesmo status.
-    if (msg.channel !== "x" && msg.channel !== "all") return;
     
     console.log(`[Queue X] Job ${job.id} completado com sucesso! (${msg.id})`);
     try {
@@ -76,7 +66,6 @@ export function startWorker() {
 
   worker.on("failed", async (job, err) => {
     const msg = job?.data;
-    if (msg?.channel !== "x" && msg?.channel !== "all") return;
 
     console.error(`[Queue X] Job ${job?.id} falhou:`, err);
     if (msg?.id) {

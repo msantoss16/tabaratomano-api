@@ -26,16 +26,10 @@ export function startWorker(sock: WASocket) {
   console.log(`[Queue] Worker BullMQ iniciado. Aguardando mensagens no Redis...`);
 
   const worker = new Worker<ApiMessage>(
-    "messages",
+    "messages_whatsapp",
     async (job: Job<ApiMessage>) => {
       const msg = job.data;
       console.log(`[Queue] Processando job ${job.id} (Mensagem: ${msg.id})...`);
-
-      // Ignore if not meant for WhatsApp
-      if (msg.channel !== "whatsapp" && msg.channel !== "both" && msg.channel !== "all") {
-        console.log(`[Queue] Ignorando job ${job.id} (channel = ${msg.channel})`);
-        return;
-      }
 
       await sendWhatsAppMessage(sock, msg);
 
