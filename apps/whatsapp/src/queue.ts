@@ -1,5 +1,5 @@
-import type { WASocket } from "@whiskeysockets/baileys";
 import { sendWhatsAppMessage } from "./sender.js";
+import { getSocket } from "./whatsapp.js";
 import axios from "axios";
 import { Worker, Job } from "bullmq";
 import IORedis from "ioredis";
@@ -22,7 +22,7 @@ interface ApiMessage {
   scheduled_at: string | null;
 }
 
-export function startWorker(sock: WASocket) {
+export function startWorker() {
   console.log(`[Queue] Worker BullMQ iniciado. Aguardando mensagens no Redis...`);
 
   const worker = new Worker<ApiMessage>(
@@ -31,10 +31,17 @@ export function startWorker(sock: WASocket) {
       const msg = job.data;
       console.log(`[Queue] Processando job ${job.id} (Mensagem: ${msg.id})...`);
 
+      const sock = getSocket();
+      
+      if (!sock || !sock.user) {
+        throw new Error("WhatsApp socket not connected/ready yet");
+      }
+
       await sendWhatsAppMessage(sock, msg);
 
-      // Add a small delay between messages to avoid ban (in addition to limiter)
-      await new Promise((r) => setTimeout(r, 2000));
+      // Add a small random delay between messages to avoid ban (in addition to limiter)
+      const randomDelay = Math.floor(Math.random() * (7000 - 3000 + 1)) + 3000;
+      await new Promise((r) => setTimeout(r, randomDelay));
     },
     {
       connection,
