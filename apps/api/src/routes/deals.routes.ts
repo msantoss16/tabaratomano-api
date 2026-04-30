@@ -66,6 +66,63 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
     }
   }, dealsController.getDealById);
 
+  fastify.post('/', {
+    onRequest: [(fastify as any).authenticate],
+    schema: {
+      tags: ['Deals'],
+      summary: 'Create a manual deal',
+      body: {
+        type: 'object',
+        required: ['title', 'price_cents'],
+        properties: {
+          title: { type: 'string' },
+          category: { type: 'string' },
+          price_cents: { type: 'number' },
+          marketplace: { type: 'string' },
+          url_affiliate: { type: 'string' }
+        }
+      }
+    }
+  }, dealsController.createDeal);
+
+  fastify.put('/:id', {
+    onRequest: [(fastify as any).authenticate],
+    schema: {
+      tags: ['Deals'],
+      summary: 'Update a deal',
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        }
+      },
+      body: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          category: { type: 'string' },
+          price_cents: { type: 'number' },
+          marketplace: { type: 'string' },
+          url_affiliate: { type: 'string' }
+        }
+      }
+    }
+  }, dealsController.updateDeal);
+
+  fastify.delete('/:id', {
+    onRequest: [(fastify as any).authenticate],
+    schema: {
+      tags: ['Deals'],
+      summary: 'Delete a deal',
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        }
+      }
+    }
+  }, dealsController.deleteDeal);
+
   fastify.post('/scrape', {
     onRequest: [(fastify as any).authenticate],
     schema: {
