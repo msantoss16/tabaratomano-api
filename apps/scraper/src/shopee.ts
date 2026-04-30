@@ -4,6 +4,7 @@ import stealth from 'puppeteer-extra-plugin-stealth';
 import * as path from 'path';
 import * as fs from 'fs';
 import type { ScrapedProduct } from './mercadolivre.js';
+import { takeScreenshot } from './session.js';
 
 chromium.use(stealth());
 
@@ -76,12 +77,7 @@ export async function scrapeShopee(url: string): Promise<ScrapedProduct> {
     };
   } catch (error) {
     console.error('Error during scraping, taking screenshot...', error);
-    const dir = path.resolve(process.cwd(), '../../scraper-errors');
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    await page.screenshot({ path: path.join(dir, `error-shopee-${timestamp}.png`), fullPage: true }).catch(() => {});
+    await takeScreenshot(page, 'error-shopee');
     throw error;
   } finally {
     await browser.close();
