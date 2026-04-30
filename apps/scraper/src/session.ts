@@ -293,7 +293,7 @@ export async function refreshSessionIfNeeded(context: BrowserContext): Promise<v
 
 // ── Warm session ──────────────────────────────────────────────────────────────
 
-function randomDelay(min: number, max: number): Promise<void> {
+export function randomDelay(min: number, max: number): Promise<void> {
   return new Promise((r) =>
     setTimeout(r, Math.floor(Math.random() * (max - min + 1)) + min),
   );

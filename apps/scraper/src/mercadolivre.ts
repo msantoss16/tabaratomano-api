@@ -4,7 +4,6 @@ import {
   initBrowser,
   warmSession,
   detectLoginWall,
-  handleLoginWall,
   takeScreenshot,
   randomDelay,
   SCREENSHOT_DIR,
@@ -101,13 +100,10 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
       // Take a screenshot so we can see the login wall
       await takeScreenshot(page, 'login-wall-mercadolivre');
 
-      const recovered = await handleLoginWall(page);
-      if (!recovered) {
-        throw new Error(
-          '[ML] Sessão bloqueada pela tela de login do Mercado Livre. ' +
-          'Verifique os screenshots em /scraper-errors para detalhes.',
-        );
-      }
+      throw new Error(
+        '[ML] Sessão bloqueada pela tela de login do Mercado Livre. ' +
+        'A sessão autenticada expirou ou é inválida. Renove via Admin ou bootstrap-session.ts.',
+      );
     }
 
     // ── Cookie banner dismissal ───────────────────────────────────────────────
