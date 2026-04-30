@@ -31,7 +31,7 @@ chromium.use(stealth());
  */
 export const SESSION_FILE =
   process.env.ML_SESSION_FILE ||
-  path.resolve(process.cwd(), '../../storage/mercadolivre-session.json');
+  path.resolve(process.cwd(), 'storage/mercadolivre-session.json');
 
 export const SCREENSHOT_DIR =
   process.env.ML_SCREENSHOT_DIR ||

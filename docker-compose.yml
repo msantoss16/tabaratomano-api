@@ -87,7 +87,7 @@ services:
     volumes:
       - ./scraper-errors:/app/scraper-errors
       # Sessão autenticada do ML (JSON gerado localmente via bootstrap-session.ts)
-      - ./storage:/app/storage
+      - ./apps/scraper/storage:/app/apps/scraper/storage
 
   whatsapp:
     build:
