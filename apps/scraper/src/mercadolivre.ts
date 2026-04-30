@@ -88,6 +88,17 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
     await page.locator('text=Aceitar cookies').click({ timeout: 2000 }).catch(() => {});
     await page.locator('text=Entendi').click({ timeout: 2000 }).catch(() => {});
 
+    // ─── Screenshot da página final (para diagnóstico) ──────────────────────────
+    const screenshotDir = path.resolve(process.cwd(), '../../scraper-errors');
+    if (!fs.existsSync(screenshotDir)) fs.mkdirSync(screenshotDir, { recursive: true });
+    const screenshotTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await page.screenshot({
+      path: path.join(screenshotDir, `page-mercadolivre-${screenshotTimestamp}.png`),
+      fullPage: true
+    }).catch(e => console.warn('Screenshot warning:', e.message));
+    console.log(`➜ Screenshot da página final salvo.`);
+    // ────────────────────────────────────────────────────────────────────────────
+
     const title = await page.locator('.ui-pdp-title').first().textContent().catch(() => '');
     
     const priceFractionStr = await page.locator('.ui-pdp-price__second-line .andes-money-amount__fraction').first().textContent().catch(() => null);
