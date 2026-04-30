@@ -29,30 +29,57 @@ export const scraperController = {
       
       const resData = await scraperRes.json();
       const product = resData.product;
-      // Usamos upsert para evitar duplicações se batermos na mesma URL
-      const savedDeal = await prisma.deal.upsert({
-        where: { url_canonical: product.url_canonical || `TEMP_${Date.now()}` },
-        update: {
-          title: product.title,
-          price_cents: product.price_cents,
-          rating: product.rating,
-          review_count: product.review_count,
-          category: product.category,
-          images: product.images,
-        },
-        create: {
-          title: product.title,
-          price_cents: product.price_cents,
-          marketplace: product.marketplace,
-          url_affiliate: product.url_affiliate,
-          rating: product.rating,
-          review_count: product.review_count,
-          seller_name: product.seller_name,
-          category: product.category,
-          images: product.images,
-          url_canonical: product.url_canonical,
-        }
-      });
+
+      request.log.info({ product }, '[Scraper] Produto extraído');
+
+      // Normalize url_canonical: empty string should be treated as null
+      const canonicalUrl = product.url_canonical?.trim() || null;
+
+      // Use findFirst + update/create to safely handle null url_canonical
+      // (Prisma upsert with nullable unique fields can behave unexpectedly)
+      let savedDeal;
+      if (canonicalUrl) {
+        savedDeal = await prisma.deal.upsert({
+          where: { url_canonical: canonicalUrl },
+          update: {
+            title: product.title,
+            price_cents: product.price_cents,
+            rating: product.rating ?? null,
+            review_count: product.review_count ?? null,
+            seller_name: product.seller_name ?? null,
+            category: product.category ?? null,
+            images: product.images ?? [],
+          },
+          create: {
+            title: product.title,
+            price_cents: product.price_cents,
+            marketplace: product.marketplace,
+            url_affiliate: product.url_affiliate,
+            rating: product.rating ?? null,
+            review_count: product.review_count ?? null,
+            seller_name: product.seller_name ?? null,
+            category: product.category ?? null,
+            images: product.images ?? [],
+            url_canonical: canonicalUrl,
+          }
+        });
+      } else {
+        // No canonical URL: always create a new record to avoid upsert issues
+        savedDeal = await prisma.deal.create({
+          data: {
+            title: product.title,
+            price_cents: product.price_cents,
+            marketplace: product.marketplace,
+            url_affiliate: product.url_affiliate,
+            rating: product.rating ?? null,
+            review_count: product.review_count ?? null,
+            seller_name: product.seller_name ?? null,
+            category: product.category ?? null,
+            images: product.images ?? [],
+            url_canonical: null,
+          }
+        });
+      }
 
       // ─── Auto-generate message for the queue ──────────────────────────────────
       try {
