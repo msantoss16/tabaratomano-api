@@ -10,10 +10,44 @@ export const dealsController = {
       const where: any = {};
       
       if (category && category !== 'todos') {
-        where.category = {
-          contains: category,
-          mode: 'insensitive'
+        // Profile-based filtering logic
+        const profiles: Record<string, any> = {
+          'economizar': {
+            // Future: filter by discount percentage
+          },
+          'custo-beneficio': {
+            rating: { gte: 4.5 },
+            review_count: { gte: 10 }
+          },
+          'gamers': {
+            category: { contains: 'Games', mode: 'insensitive' }
+          },
+          'tech': {
+            OR: [
+              { category: { contains: 'Eletrônicos', mode: 'insensitive' } },
+              { category: { contains: 'Informática', mode: 'insensitive' } },
+              { category: { contains: 'Tech', mode: 'insensitive' } }
+            ]
+          },
+          'casa-nova': {
+            category: { contains: 'Casa', mode: 'insensitive' }
+          },
+          'fitness': {
+            OR: [
+              { category: { contains: 'Fitness', mode: 'insensitive' } },
+              { category: { contains: 'Esportes', mode: 'insensitive' } }
+            ]
+          }
         };
+
+        if (profiles[category]) {
+          Object.assign(where, profiles[category]);
+        } else {
+          where.category = {
+            contains: category,
+            mode: 'insensitive'
+          };
+        }
       }
 
       const data = await prisma.deal.findMany({

@@ -7,6 +7,7 @@ import {
   closeBrowser,
   getSessionStatus,
   isSessionValid,
+  cleanupScreenshots,
 } from './session.js';
 
 dotenv.config();
@@ -71,6 +72,10 @@ const start = async () => {
     const context = await initBrowser();
     await warmSession(context);
     app.log.info('✅ Browser pronto.');
+
+    // Agenda limpeza diária de screenshots (mantém os últimos 3 dias)
+    cleanupScreenshots(3);
+    setInterval(() => cleanupScreenshots(3), 24 * 60 * 60 * 1000);
 
     await app.listen({ port, host: '0.0.0.0' });
     app.log.info(`Scraper service running on port ${port}`);

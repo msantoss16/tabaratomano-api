@@ -372,6 +372,40 @@ export async function takeScreenshot(page: Page, prefix: string): Promise<void> 
   }
 }
 
+/**
+ * Limpa screenshots antigos para economizar espaço em disco.
+ * @param maxAgeDays Idade máxima em dias para manter um arquivo. Padrão: 7 dias.
+ */
+export function cleanupScreenshots(maxAgeDays: number = 7): void {
+  try {
+    if (!fs.existsSync(SCREENSHOT_DIR)) return;
+
+    const now = Date.now();
+    const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+    const files = fs.readdirSync(SCREENSHOT_DIR);
+
+    let deletedCount = 0;
+    for (const file of files) {
+      // Apenas arquivos .png
+      if (!file.endsWith('.png')) continue;
+
+      const filePath = path.join(SCREENSHOT_DIR, file);
+      const stats = fs.statSync(filePath);
+
+      if (now - stats.mtimeMs > maxAgeMs) {
+        fs.unlinkSync(filePath);
+        deletedCount++;
+      }
+    }
+
+    if (deletedCount > 0) {
+      console.log(`🧹 [Session] Limpeza concluída: ${deletedCount} screenshots antigos removidos.`);
+    }
+  } catch (e) {
+    console.warn('⚠️ [Session] Erro ao limpar screenshots:', e);
+  }
+}
+
 // ── Status ────────────────────────────────────────────────────────────────────
 
 export interface SessionStatus {
