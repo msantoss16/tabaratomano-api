@@ -17,7 +17,7 @@ model Deal {
   seller_name   String?
   category      String?
   images        String[] // Uses native array in PostgreSQL
-  url_canonical String?
+  url_canonical String?  @unique
   created_at    DateTime @default(now())
   updated_at    DateTime @updatedAt
 

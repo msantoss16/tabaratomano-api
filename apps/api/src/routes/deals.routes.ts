@@ -15,15 +15,17 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
             properties: {
               id: { type: 'string' },
               title: { type: 'string' },
-              description: { type: 'string' },
-              original_price: { type: 'number' },
-              current_price: { type: 'number' },
-              discount: { type: 'number' },
-              store: { type: 'string' },
-              image_url: { type: 'string' },
-              link: { type: 'string' },
-              category: { type: 'string' },
-              is_hot: { type: 'boolean' }
+              price_cents: { type: 'number' },
+              marketplace: { type: 'string' },
+              url_affiliate: { type: 'string' },
+              rating: { type: 'number', nullable: true },
+              review_count: { type: 'number', nullable: true },
+              seller_name: { type: 'string', nullable: true },
+              category: { type: 'string', nullable: true },
+              images: { type: 'array', items: { type: 'string' } },
+              url_canonical: { type: 'string', nullable: true },
+              created_at: { type: 'string', format: 'date-time' },
+              updated_at: { type: 'string', format: 'date-time' }
             }
           }
         }
@@ -47,21 +49,79 @@ export default async function dealsRoutes(fastify: FastifyInstance) {
           properties: {
             id: { type: 'string' },
             title: { type: 'string' },
-            description: { type: 'string' },
-            original_price: { type: 'number' },
-            current_price: { type: 'number' },
-            discount: { type: 'number' },
-            store: { type: 'string' },
-            image_url: { type: 'string' },
-            link: { type: 'string' },
-            category: { type: 'string' },
-            is_hot: { type: 'boolean' },
-            specs: { type: 'array', items: { type: 'string' } }
+            price_cents: { type: 'number' },
+            marketplace: { type: 'string' },
+            url_affiliate: { type: 'string' },
+            rating: { type: 'number', nullable: true },
+            review_count: { type: 'number', nullable: true },
+            seller_name: { type: 'string', nullable: true },
+            category: { type: 'string', nullable: true },
+            images: { type: 'array', items: { type: 'string' } },
+            url_canonical: { type: 'string', nullable: true },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
           }
         }
       }
     }
   }, dealsController.getDealById);
+
+  fastify.post('/', {
+    onRequest: [(fastify as any).authenticate],
+    schema: {
+      tags: ['Deals'],
+      summary: 'Create a manual deal',
+      body: {
+        type: 'object',
+        required: ['title', 'price_cents'],
+        properties: {
+          title: { type: 'string' },
+          category: { type: 'string' },
+          price_cents: { type: 'number' },
+          marketplace: { type: 'string' },
+          url_affiliate: { type: 'string' }
+        }
+      }
+    }
+  }, dealsController.createDeal);
+
+  fastify.put('/:id', {
+    onRequest: [(fastify as any).authenticate],
+    schema: {
+      tags: ['Deals'],
+      summary: 'Update a deal',
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        }
+      },
+      body: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          category: { type: 'string' },
+          price_cents: { type: 'number' },
+          marketplace: { type: 'string' },
+          url_affiliate: { type: 'string' }
+        }
+      }
+    }
+  }, dealsController.updateDeal);
+
+  fastify.delete('/:id', {
+    onRequest: [(fastify as any).authenticate],
+    schema: {
+      tags: ['Deals'],
+      summary: 'Delete a deal',
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        }
+      }
+    }
+  }, dealsController.deleteDeal);
 
   fastify.post('/scrape', {
     onRequest: [(fastify as any).authenticate],

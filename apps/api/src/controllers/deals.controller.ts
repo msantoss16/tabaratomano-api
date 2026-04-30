@@ -3,9 +3,23 @@ import { prisma } from '@tabaratomano/database';
 
 export const dealsController = {
   // Get all deals found
-  getAllDeals: async (request: FastifyRequest, reply: FastifyReply) => {
+  getAllDeals: async (request: FastifyRequest<{ Querystring: { category?: string } }>, reply: FastifyReply) => {
     try {
-      const data = await prisma.deal.findMany();
+      const { category } = request.query;
+      
+      const where: any = {};
+      
+      if (category && category !== 'todos') {
+        where.category = {
+          contains: category,
+          mode: 'insensitive'
+        };
+      }
+
+      const data = await prisma.deal.findMany({
+        where,
+        orderBy: { created_at: 'desc' }
+      });
       return data;
     } catch (err) {
       request.log.error(err);
@@ -29,6 +43,69 @@ export const dealsController = {
     } catch (err) {
       request.log.error(err);
       reply.code(500).send({ error: 'Failed to fetch deal' });
+    }
+  },
+
+  // Create manual deal
+  createDeal: async (request: FastifyRequest<{ Body: any }>, reply: FastifyReply) => {
+    try {
+      const body = request.body as any;
+      const newDeal = await prisma.deal.create({
+        data: {
+          title: body.title,
+          category: body.category || null,
+          price_cents: body.price_cents,
+          marketplace: body.marketplace || '',
+          url_affiliate: body.url_affiliate || '',
+          url_canonical: body.url_canonical || null,
+          images: body.images || [],
+          rating: body.rating || null,
+          review_count: body.review_count || null,
+          seller_name: body.seller_name || null,
+        }
+      });
+      return reply.code(201).send(newDeal);
+    } catch (err) {
+      request.log.error(err);
+      reply.code(500).send({ error: 'Failed to create deal' });
+    }
+  },
+
+  // Update a deal
+  updateDeal: async (request: FastifyRequest<{ Params: { id: string }, Body: any }>, reply: FastifyReply) => {
+    try {
+      const { id } = request.params;
+      const body = request.body as any;
+      
+      const updatedDeal = await prisma.deal.update({
+        where: { id },
+        data: {
+          title: body.title,
+          category: body.category,
+          price_cents: body.price_cents,
+          marketplace: body.marketplace,
+          url_affiliate: body.url_affiliate,
+          url_canonical: body.url_canonical,
+        }
+      });
+      return updatedDeal;
+    } catch (err) {
+      request.log.error(err);
+      reply.code(500).send({ error: 'Failed to update deal' });
+    }
+  },
+
+  // Delete a deal
+  deleteDeal: async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+    try {
+      const { id } = request.params;
+      await prisma.deal.delete({
+        where: { id }
+      });
+      return reply.code(204).send();
+    } catch (err) {
+      request.log.error(err);
+      reply.code(500).send({ error: 'Failed to delete deal' });
     }
   }
 };

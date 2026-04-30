@@ -20,7 +20,7 @@ export interface ScrapedProduct {
 
 export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
   console.log('➜ Abrindo o navegador virtual...');
-  const browser = await chromium.launch({ headless: false }); // headless: false abre a janela para você ver!
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     locale: 'pt-BR',
     timezoneId: 'America/Sao_Paulo',
@@ -30,7 +30,23 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
 
   try {
     console.log(`➜ Navegando para a página do produto: ${url}`);
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    
+    // Instead of waitUntil: domcontentloaded which breaks on affiliate redirects,
+    // we just navigate and explicitly wait for the product container/title to appear.
+    await page.goto(url, { waitUntil: 'load', timeout: 60000 }).catch(e => console.log('Goto warning:', e.message));
+
+    console.log('➜ Aguardando redirecionamentos e carregamento da página final...');
+    
+    // Wait for the title element which confirms we are on the Mercado Livre product page
+    // OR wait for the affiliate showcase "Ir para produto" button
+    await page.waitForSelector('.ui-pdp-title, a:has-text("Ir para produto"), button:has-text("Ir para produto")', { timeout: 30000 });
+
+    const goToProductBtn = await page.$('a:has-text("Ir para produto"), button:has-text("Ir para produto")');
+    if (goToProductBtn) {
+      console.log('➜ Página de vitrine de afiliado detectada. Clicando em "Ir para produto"...');
+      await goToProductBtn.click();
+      await page.waitForSelector('.ui-pdp-title', { timeout: 30000 });
+    }
 
     console.log('➜ Página carregada! Extraindo informações...');
 
@@ -38,7 +54,7 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
     await page.locator('text=Aceitar cookies').click({ timeout: 2000 }).catch(() => {});
     await page.locator('text=Entendi').click({ timeout: 2000 }).catch(() => {});
 
-    const title = await page.locator('h1.ui-pdp-title').first().textContent().catch(() => '');
+    const title = await page.locator('.ui-pdp-title').first().textContent().catch(() => '');
     
     const priceFractionStr = await page.locator('.ui-pdp-price__second-line .andes-money-amount__fraction').first().textContent().catch(() => null);
     const priceCentsStr = await page.locator('.ui-pdp-price__second-line .andes-money-amount__cents').first().textContent().catch(() => '00');
@@ -50,16 +66,23 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
       price_cents = (whole * 100) + cents;
     }
 
-    const images: string[] = [];
-    const imageElements = await page.locator('.ui-pdp-gallery img').all();
-    for (const img of imageElements) {
-      const src = await img.getAttribute('src');
-      const dataZoom = await img.getAttribute('data-zoom');
-      const imageUrl = dataZoom || src;
-      if (imageUrl && imageUrl.startsWith('http') && !images.includes(imageUrl)) {
-        images.push(imageUrl);
+    const images = await page.evaluate(() => {
+      const urls: string[] = [];
+      const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content');
+      if (ogImage && ogImage.startsWith('http')) {
+        urls.push(ogImage);
       }
-    }
+      const imageElements = document.querySelectorAll('.ui-pdp-gallery img');
+      imageElements.forEach((img) => {
+        const src = img.getAttribute('src');
+        const dataZoom = img.getAttribute('data-zoom');
+        const imageUrl = dataZoom || src;
+        if (imageUrl && imageUrl.startsWith('http') && !imageUrl.includes('.svg') && !urls.includes(imageUrl)) {
+          urls.push(imageUrl);
+        }
+      });
+      return urls;
+    });
 
     const ratingStr = await page.locator('.ui-pdp-reviews__rating, .ui-review-capability__rating__average').first().textContent().catch(() => null);
     const rating = ratingStr ? parseFloat(ratingStr.replace(',', '.')) : undefined;
@@ -68,6 +91,15 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
     const review_count = reviewCountStr ? parseInt(reviewCountStr.replace(/\D/g, ''), 10) : undefined;
 
     const seller_name = await page.locator('.ui-seller-info__status-info h3, .ui-pdp-seller__link-trigger').first().textContent().catch(() => undefined);
+
+    const category = await page.evaluate(() => {
+      const breadcrumbs = document.querySelectorAll('.andes-breadcrumb__item');
+      if (breadcrumbs.length > 2) {
+        // Usually the second or third item is a good category (e.g. Home > Electronics > SMARTPHONES)
+        return breadcrumbs[1]?.textContent?.trim();
+      }
+      return breadcrumbs[0]?.textContent?.trim();
+    }).catch(() => undefined);
 
     const url_canonical = await page.evaluate(() => {
         const canonicalLink = document.querySelector('link[rel="canonical"]');
@@ -82,10 +114,15 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
       rating,
       review_count,
       seller_name: seller_name?.trim(),
+      category: category,
       images: images.slice(0, 5), // Limiting to top 5 images
       url_affiliate: url,
       url_canonical: url_canonical || undefined,
     };
+  } catch (error) {
+    console.error('Error during scraping, taking screenshot...', error);
+    await page.screenshot({ path: 'scraper-error.png', fullPage: true }).catch(() => {});
+    throw error;
   } finally {
     await browser.close();
   }
