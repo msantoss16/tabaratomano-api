@@ -140,6 +140,21 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
         return canonicalLink ? canonicalLink.getAttribute('href') : null;
     });
 
+    const finalUrl = page.url();
+    console.log(`➜ URL final da página: ${finalUrl}`);
+
+    // Validate: if title is empty, the page didn't load correctly
+    if (!title || title.trim() === '') {
+      const pageHtml = await page.content().catch(() => '');
+      console.error(`➜ Título não encontrado. URL final: ${finalUrl}`);
+      console.error(`➜ Início do HTML: ${pageHtml.substring(0, 500)}`);
+      const dir = path.resolve(process.cwd(), '../../scraper-errors');
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      await page.screenshot({ path: path.join(dir, `empty-result-${timestamp}.png`), fullPage: true }).catch(() => {});
+      throw new Error(`Página do produto não carregou corretamente. URL final: ${finalUrl}`);
+    }
+
     return {
       marketplace: 'mercado_livre',
       title: title?.trim() || '',
