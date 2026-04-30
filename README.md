@@ -103,7 +103,9 @@ Quando o servidor da API estiver rodando, você pode acessar a documentação in
 O serviço de scraper expõe um endpoint principal:
 
 - `POST /scrape`: Recebe um corpo JSON `{ "url": "..." }` e retorna os dados extraídos do produto.
+- `POST /scrape/bulk`: Recebe um corpo JSON `{ "urls": ["...", "..."] }` e retorna os dados extraídos dos produtos em ordem inversa à da requisição.
+- `POST /scrape/queue`: Recebe um corpo JSON `{ "urls": ["...", "..."] }` e adiciona os produtos à fila de processamento.
 
----
+## `https://api.tabaratomano.com.br/scraper-errors/` - Erros do scraper.
 
 Feito por [TabaratoMano](https://tabaratomano.com.br)

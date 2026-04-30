@@ -40,14 +40,46 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
     console.log('➜ Aguardando redirecionamentos e carregamento da página final...');
     
     // Wait for the title element which confirms we are on the Mercado Livre product page
-    // OR wait for the affiliate showcase "Ir para produto" button
-    await page.waitForSelector('.ui-pdp-title, a:has-text("Ir para produto"), button:has-text("Ir para produto")', { timeout: 30000 });
+    // OR wait for the affiliate showcase "Ir para produto" button OR login wall
+    await page.waitForSelector('.ui-pdp-title, a:has-text("Ir para produto"), button:has-text("Ir para produto"), text="Para continuar, acesse sua conta", text="Sou novo"', { timeout: 30000 }).catch(() => {});
 
     const goToProductBtn = await page.$('a:has-text("Ir para produto"), button:has-text("Ir para produto")');
     if (goToProductBtn) {
-      console.log('➜ Página de vitrine de afiliado detectada. Clicando em "Ir para produto"...');
-      await goToProductBtn.click();
-      await page.waitForSelector('.ui-pdp-title', { timeout: 30000 });
+      console.log('➜ Página de vitrine de afiliado detectada.');
+      const href = await page.evaluate((el) => el.getAttribute('href'), goToProductBtn);
+      
+      if (href) {
+        console.log(`➜ Redirecionando para: ${href}`);
+        await page.goto(href, { waitUntil: 'load', timeout: 60000 }).catch(e => console.log('Goto warning:', e.message));
+      } else {
+        console.log('➜ Clicando em "Ir para produto"...');
+        await goToProductBtn.click();
+      }
+      
+      await page.waitForSelector('.ui-pdp-title, text="Para continuar, acesse sua conta", text="Sou novo"', { timeout: 30000 }).catch(() => {});
+    }
+
+    // Check for login wall
+    let currentUrl = page.url();
+    const loginWall = await page.$('text="Para continuar, acesse sua conta", text="Sou novo", text="Já tenho conta"');
+    if (loginWall || currentUrl.includes('login') || currentUrl.includes('registration')) {
+        console.log('➜ Tela de login detectada. Tentando extrair a URL de destino...');
+        let goUrl: string | null = null;
+        try {
+            const urlObj = new URL(currentUrl);
+            goUrl = urlObj.searchParams.get('go') || urlObj.searchParams.get('return_url');
+            if (goUrl) {
+                goUrl = decodeURIComponent(goUrl);
+            }
+        } catch (e) {}
+
+        if (goUrl) {
+            console.log(`➜ Redirecionando direto para o produto: ${goUrl}`);
+            await page.goto(goUrl, { waitUntil: 'load', timeout: 60000 });
+            await page.waitForSelector('.ui-pdp-title', { timeout: 30000 });
+        } else {
+            console.log('➜ Não foi possível extrair a URL de destino da tela de login.');
+        }
     }
 
     console.log('➜ Página carregada! Extraindo informações...');
