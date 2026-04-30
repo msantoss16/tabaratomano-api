@@ -1,6 +1,8 @@
 import { chromium } from 'playwright-extra';
 // @ts-ignore
 import stealth from 'puppeteer-extra-plugin-stealth';
+import * as path from 'path';
+import * as fs from 'fs';
 
 chromium.use(stealth());
 
@@ -121,7 +123,12 @@ export async function scrapeMercadoLivre(url: string): Promise<ScrapedProduct> {
     };
   } catch (error) {
     console.error('Error during scraping, taking screenshot...', error);
-    await page.screenshot({ path: 'scraper-error.png', fullPage: true }).catch(() => {});
+    const dir = path.resolve(process.cwd(), '../../scraper-errors');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await page.screenshot({ path: path.join(dir, `error-mercadolivre-${timestamp}.png`), fullPage: true }).catch(() => {});
     throw error;
   } finally {
     await browser.close();
