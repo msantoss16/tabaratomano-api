@@ -86,6 +86,8 @@ services:
         condition: service_healthy
     volumes:
       - ./scraper-errors:/app/scraper-errors
+      # Persistent ML session (cookies, localStorage) — survives container restarts
+      - ml-session:/app/ml-session
 
   whatsapp:
     build:
@@ -131,6 +133,7 @@ volumes:
   postgres-data:
   redis-data:
   baileys-auth:
+  ml-session:
 
 networks:
   backend:
