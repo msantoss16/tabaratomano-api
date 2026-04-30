@@ -13,6 +13,7 @@ import couponsRoutes from "./routes/coupons.routes.js";
 import blogRoutes from "./routes/blog.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import messengerRoutes from "./routes/messenger.routes.js";
+import scraperRoutes from "./routes/scraper.routes.js";
 
 dotenv.config();
 
@@ -103,6 +104,7 @@ fastify.register(categoriesRoutes, { prefix: "/api/categories" });
 fastify.register(couponsRoutes, { prefix: "/api/coupons" });
 fastify.register(blogRoutes, { prefix: "/api/blog" });
 fastify.register(messengerRoutes, { prefix: "/api/messenger" });
+fastify.register(scraperRoutes, { prefix: "/api/scraper" });
 
 // Health check route
 fastify.get("/", async (request, reply) => {
