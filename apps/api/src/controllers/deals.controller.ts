@@ -3,9 +3,23 @@ import { prisma } from '@tabaratomano/database';
 
 export const dealsController = {
   // Get all deals found
-  getAllDeals: async (request: FastifyRequest, reply: FastifyReply) => {
+  getAllDeals: async (request: FastifyRequest<{ Querystring: { category?: string } }>, reply: FastifyReply) => {
     try {
-      const data = await prisma.deal.findMany();
+      const { category } = request.query;
+      
+      const where: any = {};
+      
+      if (category && category !== 'todos') {
+        where.category = {
+          contains: category,
+          mode: 'insensitive'
+        };
+      }
+
+      const data = await prisma.deal.findMany({
+        where,
+        orderBy: { created_at: 'desc' }
+      });
       return data;
     } catch (err) {
       request.log.error(err);

@@ -33,4 +33,4 @@ EXPOSE 3000
 
 # Start com migration (produção)
 WORKDIR /app/packages/database
-CMD ["sh", "-c", "npx prisma db push && cd /app/apps/api && node dist/server.js"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && cd /app/apps/api && node dist/server.js"]

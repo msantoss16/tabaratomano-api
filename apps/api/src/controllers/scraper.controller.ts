@@ -1,13 +1,17 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@tabaratomano/database';
 
-const SCRAPER_URL = process.env.SCRAPER_URL || 'http://localhost:3001';
+const SCRAPER_URL = process.env.SCRAPER_URL || 'http://127.0.0.1:3001';
 export const scraperController = {
   async scrapeAndSave(request: FastifyRequest, reply: FastifyReply) {
-    const { url } = request.body as { url?: string };
+    let { url } = request.body as { url?: string };
     
     if (!url) {
       return reply.code(400).send({ error: 'Você precisa enviar uma "url" válida no corpo da requisição.' });
+    }
+
+    if (!url.startsWith('http')) {
+      url = 'https://' + url;
     }
 
     try {
@@ -26,8 +30,17 @@ export const scraperController = {
       const resData = await scraperRes.json();
       const product = resData.product;
       // Usamos upsert para evitar duplicações se batermos na mesma URL
-      const savedDeal = await prisma.deal.create({
-        data: {
+      const savedDeal = await prisma.deal.upsert({
+        where: { url_canonical: product.url_canonical || `TEMP_${Date.now()}` },
+        update: {
+          title: product.title,
+          price_cents: product.price_cents,
+          rating: product.rating,
+          review_count: product.review_count,
+          category: product.category,
+          images: product.images,
+        },
+        create: {
           title: product.title,
           price_cents: product.price_cents,
           marketplace: product.marketplace,

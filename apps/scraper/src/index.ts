@@ -6,7 +6,7 @@ import { scrapeShopee } from './shopee.js';
 export async function scrapeUrl(url: string): Promise<ScrapedProduct> {
   const lowercaseUrl = url.toLowerCase();
   
-  if (lowercaseUrl.includes('mercadolivre.com') || lowercaseUrl.includes('mercadolibre')) {
+  if (lowercaseUrl.includes('mercadolivre.com') || lowercaseUrl.includes('mercadolibre') || lowercaseUrl.includes('meli.la')) {
     console.log(`[Scraper] Identificado Mercado Livre: ${url}`);
     return scrapeMercadoLivre(url);
   } else if (lowercaseUrl.includes('magazineluiza.com') || lowercaseUrl.includes('magalu')) {
