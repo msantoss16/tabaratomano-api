@@ -84,6 +84,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./scraper-errors:/app/scraper-errors
 
   whatsapp:
     build:

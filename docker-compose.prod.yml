@@ -10,6 +10,7 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/lib/letsencrypt
+      - ./scraper-errors:/usr/share/nginx/html/scraper-errors
     depends_on:
       - api
     networks:
