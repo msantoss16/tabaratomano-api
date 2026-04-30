@@ -1,0 +1,6 @@
+# Não versione arquivos de sessão — contêm cookies de autenticação
+mercadolivre-session.json
+*.json
+
+# Mas preserve os backups listados (opcional, remova se não quiser)
+!mercadolivre-session.backup-*.json

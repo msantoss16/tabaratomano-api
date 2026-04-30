@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "bootstrap-session": "tsx scripts/bootstrap-session.ts"
   },
   "dependencies": {
     "fastify": "^5.8.4",
