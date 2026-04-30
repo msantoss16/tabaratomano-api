@@ -8,6 +8,7 @@ import {
   randomDelay,
   SCREENSHOT_DIR,
 } from './session.js';
+import { mapMLCategoryToSite, mapNameByKeywords } from './utils/category-mapper.js';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -226,12 +227,30 @@ async function extractProductData(
     .textContent()
     .catch(() => undefined);
 
-  // Category from breadcrumbs
-  const category = await page.evaluate(() => {
+  // Category mapping
+  const categoryId = await page.evaluate(() => {
+    const meta = document.querySelector('meta[name="twitter:app:url:googleplay"]');
+    if (meta) {
+      const content = meta.getAttribute('content');
+      const match = content?.match(/category_id=([^&]+)/);
+      return match ? match[1] : null;
+    }
+    return null;
+  }).catch(() => null);
+
+  const mapped = mapMLCategoryToSite(categoryId || undefined);
+
+  // Category from breadcrumbs as fallback
+  const breadcrumbCategory = await page.evaluate(() => {
     const breadcrumbs = document.querySelectorAll('.andes-breadcrumb__item');
-    if (breadcrumbs.length > 2) return breadcrumbs[1]?.textContent?.trim();
+    if (breadcrumbs.length > 1) {
+      // Return second item if available (more specific), otherwise first
+      return breadcrumbs[1]?.textContent?.trim() || breadcrumbs[0]?.textContent?.trim();
+    }
     return breadcrumbs[0]?.textContent?.trim();
   }).catch(() => undefined);
+
+  const category = mapped?.label || mapNameByKeywords(breadcrumbCategory)?.label || breadcrumbCategory;
 
   // Canonical URL
   const url_canonical = await page
